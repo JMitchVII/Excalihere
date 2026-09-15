@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Upstream Excalidraw clone — reference only, and it carries its own .git,
+# which git would otherwise flag as an embedded repository.
+excalidraw-src/
+
+# Excalidraw fonts, copied into the app by scripts/copy-assets.mjs on install
+app/public/fonts/
+
+# node-windows service wrapper: generated .exe/.xml plus the service logs
+server/daemon/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment / local overrides
+.env
+.env.*
+!.env.example
+
+# Caches
+.vite/
+.cache/
+*.tsbuildinfo
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# OS cruft
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Drawings — these are your documents, not source. Drop this if you actually
+# want them versioned.
+*.excalidraw

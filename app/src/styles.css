@@ -1,0 +1,181 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+.xh-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.xh-canvas {
+  position: relative; /* anchors .xh-overlay */
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---------------------------------------------------------------- banner */
+
+.xh-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.9rem;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.83rem;
+  color: #4a3a05;
+  background: #fff4d6;
+  border-bottom: 1px solid #f0d99a;
+}
+
+.xh-banner__actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.xh-banner button {
+  padding: 0.3rem 0.7rem;
+  font: inherit;
+  color: #1b1b1f;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #d9c07a;
+  border-radius: 0.4rem;
+}
+
+.xh-banner button:hover {
+  background: #fffaf0;
+}
+
+.xh-banner button.xh-danger {
+  color: #a11a1a;
+  border-color: #e0a3a3;
+}
+
+/* ------------------------------------------------------------ status pill */
+
+/*
+ * Overlay positioned to sit inline with Excalidraw's menu button: that button
+ * is a 36px square at (16, 16), so clearing it needs 16 + 36 + an 8px gap.
+ * Tokens below are Excalidraw's own island values, mirrored here because this
+ * element lives outside their .excalidraw root and cannot inherit the vars.
+ */
+.xh-overlay {
+  --xh-island: #fff;
+  --xh-text: #1b1b1f;
+  --xh-hover: #f1f0ff;
+  --xh-muted: #6b6b73;
+
+  position: absolute;
+  top: 16px;
+  left: 60px;
+  z-index: 4;
+  display: flex;
+  /* Size to the pill rather than shrink-to-fit against the canvas width, so
+     the pill is never squeezed when the label appears. */
+  width: max-content;
+  pointer-events: none;
+}
+
+.xh-overlay--dark {
+  --xh-island: #232329;
+  --xh-text: #e3e3e8;
+  --xh-hover: hsl(245deg 10% 21%);
+  --xh-muted: #a8a8b3;
+}
+
+.xh-status {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 36px;
+  /* 8px dot + 2x14px padding = 36px, i.e. square, matching the menu button. */
+  padding: 0 0.875rem;
+  font-family:
+    Assistant, system-ui, BlinkMacSystemFont, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--xh-text);
+  pointer-events: all;
+  cursor: pointer;
+  background: var(--xh-island);
+  border: none;
+  border-radius: 0.5rem;
+  transition: background 0.15s ease;
+  box-shadow:
+    0 0 0.93px 0 rgb(0 0 0 / 17%),
+    0 0 3.13px 0 rgb(0 0 0 / 8%),
+    0 7px 14px 0 rgb(0 0 0 / 5%);
+}
+
+.xh-status:hover {
+  background: var(--xh-hover);
+}
+
+.xh-status:focus-visible {
+  outline: 2px solid #6965db;
+  outline-offset: 2px;
+}
+
+/*
+ * Collapse/expand is just the label rendering or not; the pill is content-sized,
+ * so it shrinks to the 36px dot-only square on its own.
+ */
+.xh-status__label {
+  max-width: min(22rem, 40vw);
+  margin-left: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Idle states read as secondary; problems keep full-strength text. */
+.xh-status--unlinked .xh-status__label,
+.xh-status--saved .xh-status__label {
+  color: var(--xh-muted);
+}
+
+.xh-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  background: #9aa0a6;
+  border-radius: 50%;
+  flex: none;
+}
+
+.xh-status--saved .xh-dot {
+  background: #2f9e44;
+}
+
+.xh-status--dirty .xh-dot {
+  background: #f08c00;
+}
+
+.xh-status--saving .xh-dot {
+  background: #1971c2;
+  animation: xh-pulse 1s ease-in-out infinite;
+}
+
+.xh-status--error .xh-dot,
+.xh-status--conflict .xh-dot,
+.xh-status--needs-permission .xh-dot {
+  background: #e03131;
+}
+
+@keyframes xh-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xh-status--saving .xh-dot {
+    animation: none;
+  }
+}

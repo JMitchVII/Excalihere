@@ -1,0 +1,16 @@
+{
+  "name": "excalihere-server",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Static server + Windows service wrapper for Excalihere",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "install-service": "node service.js install",
+    "uninstall-service": "node service.js uninstall",
+    "service-status": "node service.js status"
+  },
+  "dependencies": {
+    "node-windows": "1.0.0-beta.8"
+  }
+}
