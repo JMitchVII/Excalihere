@@ -4,6 +4,8 @@ node_modules/
 # Build output
 dist/
 build/
+server/serverBundle.js
+server/assets.generated.js
 
 # Upstream Excalidraw clone — reference only, and it carries its own .git,
 # which git would otherwise flag as an embedded repository.
@@ -14,6 +16,10 @@ app/public/fonts/
 
 # node-windows service wrapper: generated .exe/.xml plus the service logs
 server/daemon/
+
+# TLS material - never commit private keys
+server/certs/*
+!server/certs/README.md
 
 # Logs
 *.log

@@ -6,11 +6,17 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "bundle": "node build.js",
+    "bundle:no-fonts": "node build.js --no-fonts",
+    "start:bundle": "node serverBundle.js",
     "install-service": "node service.js install",
     "uninstall-service": "node service.js uninstall",
     "service-status": "node service.js status"
   },
   "dependencies": {
     "node-windows": "1.0.0-beta.8"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

@@ -9,12 +9,21 @@
  *   node service.js start | stop | status
  */
 
+const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
 const { Service } = require("node-windows");
 
 const SERVICE_NAME = "Excalihere";
-const SCRIPT = path.resolve(__dirname, "server.js");
+
+/*
+ * Prefer the self-contained bundle when one has been built: it has no
+ * node_modules and no app/dist dependency, so there is less for the service
+ * account to fail to read. The path is baked in at install time, so rebuilding
+ * the bundle is fine but *creating* one later needs a reinstall to take effect.
+ */
+const BUNDLE = path.resolve(__dirname, "serverBundle.js");
+const SCRIPT = fs.existsSync(BUNDLE) ? BUNDLE : path.resolve(__dirname, "server.js");
 
 const svc = new Service({
   name: SERVICE_NAME,
@@ -25,10 +34,19 @@ const svc = new Service({
   wait: 2,
   grow: 0.5,
   maxRestarts: 10,
+  // Only forward what is actually set: the server's own defaults (including
+  // auto-detecting certs/ ) are better than baking empty values into the
+  // service definition, which would need a reinstall to change.
   env: [
-    { name: "EXCALIHERE_PORT", value: process.env.EXCALIHERE_PORT || "5178" },
-    { name: "EXCALIHERE_HOST", value: process.env.EXCALIHERE_HOST || "127.0.0.1" },
-  ],
+    ["EXCALIHERE_PORT", process.env.EXCALIHERE_PORT],
+    ["EXCALIHERE_HOST", process.env.EXCALIHERE_HOST],
+    ["EXCALIHERE_CERT", process.env.EXCALIHERE_CERT],
+    ["EXCALIHERE_KEY", process.env.EXCALIHERE_KEY],
+    ["EXCALIHERE_HTTPS_PORT", process.env.EXCALIHERE_HTTPS_PORT],
+    ["EXCALIHERE_HTTPS_HOST", process.env.EXCALIHERE_HTTPS_HOST],
+  ]
+    .filter(([, value]) => value)
+    .map(([name, value]) => ({ name, value })),
 });
 
 const sc = (...args) => {

@@ -112,6 +112,96 @@ disk per request, so the new build is picked up without restarting the service
 - The service runs as LocalSystem, so the repo must stay on a local fixed drive
   it can read.
 
+### One-file build
+
+`build.js` uses esbuild to bake the server *and* the entire built app into a
+single `serverBundle.js`:
+
+```powershell
+cd app;    npm run build     # produce app/dist
+cd ..\server; npm run bundle # fold it into serverBundle.js
+```
+
+The result runs anywhere Node does, with no `node_modules` and no `app/dist`
+beside it:
+
+```powershell
+node serverBundle.js
+```
+
+Roughly 20MB, holding all 365 files of the build. Assets that compress are
+stored gzipped and handed to the browser still compressed (inflated on the fly
+for the rare client that will not take gzip); already-compressed formats — woff2,
+png — are stored as-is rather than burning CPU for nothing. Each file carries a
+content-hash ETag, so revalidation is a 304 without touching disk.
+
+`npm run bundle:no-fonts` drops the ~14MB of Excalidraw fonts, giving a ~6MB
+bundle; the app then falls back to loading them from unpkg, so it needs a
+network connection to look right.
+
+`server.js` still runs straight from disk as before — if no embedded assets are
+compiled in it serves `app/dist`, so the same source covers both modes. The
+service installer prefers `serverBundle.js` when one exists, and says which it
+picked. Note the path is fixed at install time, so if you build a bundle *after*
+installing, reinstall for the service to use it.
+
+### Reaching it from another machine (HTTPS via mkcert)
+
+The File System Access API only works in a secure context. `http://localhost`
+counts; `http://<lan-ip>` does not, so a remote machine needs HTTPS.
+
+Drop a cert pair at `server/certs/cert.pem` + `key.pem` and the server adds an
+HTTPS listener on port 5443 next to the existing HTTP one. To create them:
+
+```powershell
+winget install FiloSottile.mkcert
+mkcert -install                       # trust the local CA on this machine
+
+cd H:\Morello\Excalihere\server
+mkcert -cert-file certs\cert.pem -key-file certs\key.pem `
+       $env:COMPUTERNAME localhost 127.0.0.1 ::1
+```
+
+The names you pass must include whatever you actually type in the URL bar — if
+you browse by IP, the IP has to be in there.
+
+Then, on **each machine you want to browse from**, install the same root CA, or
+it will not trust the cert:
+
+```powershell
+mkcert -CAROOT                        # on the server: shows where rootCA.pem is
+# copy rootCA.pem across, then on the other machine, as Administrator:
+certutil -addstore -f "ROOT" rootCA.pem
+```
+
+Allow the port through the firewall (Administrator, once):
+
+```powershell
+New-NetFirewallRule -DisplayName "Excalihere HTTPS" -Direction Inbound `
+  -Protocol TCP -LocalPort 5443 -Action Allow -Profile Private
+```
+
+Restart the service so it reads the new certs (`node service.js stop`, then
+`start`), and browse `https://<server-name>:5443`.
+
+Knobs: `EXCALIHERE_CERT`, `EXCALIHERE_KEY`, `EXCALIHERE_HTTPS_PORT`,
+`EXCALIHERE_HTTPS_HOST` (defaults to `0.0.0.0` — this listener is meant to be
+reachable, unlike the HTTP one).
+
+#### Two things this does not do
+
+- **HTTP stays loopback-only and HTTPS gets its own port**, rather than moving
+  everything to TLS. The scheme is part of the origin, so serving the local
+  machine over https would orphan every file already linked on
+  `http://localhost:5178` and force a re-link. Local use is unchanged; HTTPS is
+  purely additive.
+- **It does not give you one shared drawing.** The file API writes to the
+  *browser's* machine, not the server's — the service only ships static files.
+  A second machine gets its own local file. For a genuinely shared drawing,
+  point both at the same file on a mapped drive or sync folder; the conflict
+  guard will catch cross-machine edits, though mtime over SMB is coarser than
+  local NTFS so it will flag conflicts more eagerly.
+
 ## Limits
 
 - Needs a Chromium browser (Chrome, Edge, Brave, Arc). Firefox and Safari have
