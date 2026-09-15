@@ -4,8 +4,6 @@ node_modules/
 # Build output
 dist/
 build/
-server/serverBundle.js
-server/assets.generated.js
 
 # Upstream Excalidraw clone — reference only, and it carries its own .git,
 # which git would otherwise flag as an embedded repository.
